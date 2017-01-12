@@ -33,3 +33,6 @@ Style/Documentation:
 
 Next:
   Enabled: false
+
+FrozenStringLiteralComment:
+  Enabled: false
