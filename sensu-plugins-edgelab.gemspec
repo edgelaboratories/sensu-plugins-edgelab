@@ -12,7 +12,9 @@ Gem::Specification.new do |s|
   s.version                = '1.1.0'
 
   s.add_runtime_dependency 'sensu-plugin', '~> 1.2'
-  s.add_runtime_dependency 'rest-client',  '1.8.0'
+  s.add_runtime_dependency 'inifile', '3.0.0'
+  s.add_runtime_dependency 'rest-client', '1.8.0'
+  s.add_runtime_dependency 'ruby-mysql', '~> 2.9'
 
   s.add_development_dependency 'bundler',                   '~> 1.7'
   s.add_development_dependency 'rake',                      '~> 10.5'
