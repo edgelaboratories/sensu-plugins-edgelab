@@ -38,14 +38,21 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     end
   end
 
-  # Check if pending allocs of this job are not too old
-  def check_starting(job, failed)
+  # Check that allocations are in the desired status
+  def check_allocations(job, failed)
     allocations = api_call "/v1/job/#{job['ID']}/allocations"
 
     allocations.each do |alloc|
       if alloc['DesiredStatus'] == 'run'
+        # Batch stay in run DesiredStatus even if task completed successfully.
+        next if job['Type'] == 'batch' and alloc['ClientStatus'] == 'complete'
+
         alloc['TaskStates'].each do |_, state|
-          if state['State'] == 'pending'
+          if state['State'] == 'dead'
+              failed << "Alloc #{alloc['Name']} is dead but desired status is 'run'"
+
+          # Check that pending alloc are not too old
+          elsif state['State'] == 'pending'
             # Get the last event timestamp (which is in microseconds in Nomad)
             event_time = state['Events'][-1]['Time'] / 1_000_000_000
             starting_time = (Time.new - Time.at(event_time)).round
@@ -56,6 +63,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
               # No need to check other task in the same task group.
               break
             end
+
           end
         end
       end
@@ -71,13 +79,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     failed = []
 
     jobs.each do |job|
-      job['JobSummary']['Summary'].each do |group, summary|
-        if summary['Starting'] != 0
-          check_starting job, failed
-        elsif summary['Failed'] != 0
-          failed << "#{job['Name']}.#{group}"
-        end
-      end
+      check_allocations job, failed
     end
 
     if failed.any?
