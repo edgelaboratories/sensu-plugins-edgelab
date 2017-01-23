@@ -38,6 +38,62 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     end
   end
 
+  # Returning an array containing human readable explanation for placement failures
+  def placement_failures_reasons(failed_eval)
+    reasons = []
+    failed_eval['FailedTGAllocs'].each do |_, metrics|
+      metrics.fetch(:ClassFiltered, []).each do |class_, count|
+        reasons << "Class #{class_} filtered #{count} nodes"
+      end
+
+      metrics.fetch(:ConstraintFiltered, []).each do |constraint, count|
+        reasons << "Constraint #{constraint} filtered #{count} nodes"
+      end
+
+      if metrics['NodesExhausted'] > 0
+        reasons << "Resources exhausted on #{metrics['NodesExhausted']} nodes"
+      end
+
+      metrics.fetch(:ClassExhausted, []).each do |class_, count|
+        reasons << "Class #{class_} exhausted on #{count} nodes"
+      end
+
+      metrics.fetch('DimensionExhausted', []).each do |dimension, count|
+        reasons << "#{dimension} on #{count} nodes"
+      end
+    end
+
+    reasons
+  end
+
+  # Check that there is no failed evaluations
+  def check_evaluations(job, failed)
+    evaluations = api_call "/v1/job/#{job['ID']}/evaluations"
+
+    blocked = false
+    last_failed = nil
+
+    evaluations.each do |evaluation|
+      if evaluation['Status'] == 'blocked'
+        blocked = true
+      end
+
+      next if evaluation['FailedTGAllocs'].nil?
+
+      if last_failed.nil? || last_failed['CreateIndex'] < evaluation['CreateIndex']
+        last_failed = evaluation
+      end
+    end
+
+    if blocked && !last_failed.nil?
+      failure_reasons = placement_failures_reasons last_failed
+
+      if failure_reasons.any?
+        failed << "#{job['ID']}: Placemement failure [" + failure_reasons.join(' / ') + ']'
+      end
+    end
+  end
+
   # Check that allocations are in the desired status
   def check_allocations(job, failed)
     allocations = api_call "/v1/job/#{job['ID']}/allocations"
@@ -45,11 +101,11 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     allocations.each do |alloc|
       if alloc['DesiredStatus'] == 'run'
         # Batch stay in run DesiredStatus even if task completed successfully.
-        next if job['Type'] == 'batch' and alloc['ClientStatus'] == 'complete'
+        next if job['Type'] == 'batch' && alloc['ClientStatus'] == 'complete'
 
         alloc['TaskStates'].each do |_, state|
           if state['State'] == 'dead'
-              failed << "Alloc #{alloc['Name']} is dead but desired status is 'run'"
+            failed << "Alloc #{alloc['Name']} is dead but desired status is 'run'"
 
           # Check that pending alloc are not too old
           elsif state['State'] == 'pending'
@@ -63,7 +119,6 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
               # No need to check other task in the same task group.
               break
             end
-
           end
         end
       end
@@ -79,6 +134,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     failed = []
 
     jobs.each do |job|
+      check_evaluations job, failed
       check_allocations job, failed
     end
 
