@@ -23,8 +23,10 @@ class CheckNomadLeader < Sensu::Plugin::Check::CLI
     url = config[:nomad] + endpoint
     begin
       response = RestClient.get(url)
-    rescue => e
+    rescue RestClient::ExceptionWithResponse => e
       critical "Error #{e.http_code}: #{e.response}"
+    rescue => e
+      critical "Unable to contact Nomad: #{e}"
     else
       begin
         return JSON.parse(response)
