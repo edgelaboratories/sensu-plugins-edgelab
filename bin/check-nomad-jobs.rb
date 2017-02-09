@@ -14,7 +14,7 @@ require 'json'
 
 class CheckNomadAllocations < Sensu::Plugin::Check::CLI
   option :nomad,
-         description: 'nomad server address',
+         description: 'Nomad server URL',
          long: '--nomad SERVER',
          default: 'http://localhost:4646'
   option :alloc_starting_time,
@@ -22,7 +22,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
          long: '--alloc-starting-time',
          default: 300
 
-  # Call Nomad api and parse the json response
+  # Call Nomad api and parse the JSON response
   def api_call(endpoint)
     url = config[:nomad] + endpoint
     begin
@@ -33,7 +33,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
       begin
         return JSON.parse(response)
       rescue => e
-        critical "Unable to parse json in response: #{e}"
+        critical "Unable to parse JSON in response: #{e}"
       end
     end
   end
