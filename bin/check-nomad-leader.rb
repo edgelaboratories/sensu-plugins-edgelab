@@ -28,8 +28,11 @@ class CheckNomadLeader < Sensu::Plugin::Check::CLI
     rescue => e
       critical "Unable to contact Nomad: #{e}"
     else
+      # Sensu ships with Ruby 2.3.0, which doesn't know how to parse strings
+      # as top-level element.
+      value = "{\"leader\": #{response}}"
       begin
-        return JSON.parse(response)
+        return JSON.parse(value)['leader']
       rescue => e
         critical "Unable to parse JSON in response: #{e}"
       end
@@ -38,6 +41,6 @@ class CheckNomadLeader < Sensu::Plugin::Check::CLI
 
   def run
     leader = api_call '/v1/status/leader'
-    ok "Nomad leader is #{leader}"
+    ok "Nomad leader at #{leader}"
   end
 end
