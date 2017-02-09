@@ -8,12 +8,18 @@ This repository contains custom Sensu plugins developed by Edgelab.
 How to use in development
 =========================
 
-After cloning the repository, in the repo directory::
+After cloning the repository, in the repo directory:
 
-    # Install dependecies
+* Install dependecies::
+
     bundle install --path .gems
 
-    # Run rake in the bundle context
+* You can run one of the ``bin/`` script with the correct dependencies using::
+
+    bundle exec bin/my-script.rb
+
+* Sanity checks with ``rake`` in the bundle context::
+
     bundle exec rake
 
 
