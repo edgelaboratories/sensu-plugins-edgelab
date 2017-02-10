@@ -17,10 +17,21 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
          description: 'Nomad server URL',
          long: '--nomad SERVER',
          default: 'http://localhost:4646'
+
   option :alloc_starting_time,
          description: '',
-         long: '--alloc-starting-time',
+         long: '--alloc-starting-time SECONDS',
          default: 300
+
+  option :alloc_restarts_count,
+         description: 'Limit number of restarts in restarts interval',
+         long: '--alloc-restarts-count COUNT',
+         default: 3
+
+  option :alloc_restarts_interval,
+         description: 'Interval in seconds for the limit number of restarts',
+         long: '--alloc-restarts-interval SECONDS',
+         default: 3600
 
   # Call Nomad api and parse the JSON response
   def api_call(endpoint)
@@ -125,6 +136,32 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     end
   end
 
+  # Check that running allocations are not restarting endlessly.
+  def check_restarts(job, failed)
+    allocations = api_call "/v1/job/#{job['ID']}/allocations"
+    now = Time.new.to_i
+
+    allocations.each do |alloc|
+      if %w(running pending).include? alloc['ClientStatus']
+        alloc['TaskStates'].each do |_, state|
+          restarts = 0
+          state['Events'].each do |event|
+            if event['Type'] == 'Restarting'
+              event_time = event['Time'] / 1_000_000_000
+              if (now - event_time) < config[:alloc_restarts_interval].to_i
+                restarts += 1
+              end
+            end
+          end
+
+          if restarts >= config[:alloc_restarts_count].to_i
+            failed << "Alloc #{alloc['Name']} restart #{restarts} times"
+          end
+        end
+      end
+    end
+  end
+
   def run
     jobs = api_call '/v1/jobs'
     if jobs.empty?
@@ -136,6 +173,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     jobs.each do |job|
       check_evaluations job, failed
       check_allocations job, failed
+      check_restarts job, failed
     end
 
     if failed.any?
