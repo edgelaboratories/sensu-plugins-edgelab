@@ -96,7 +96,8 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
       end
     end
 
-    if blocked && !last_failed.nil?
+    # System jobs don't have blocked evaluation, only one evaluation per job.
+    if (job['Type'] == 'system' || blocked) && !last_failed.nil?
       failure_reasons = placement_failures_reasons last_failed
 
       if failure_reasons.any?
