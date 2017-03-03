@@ -17,6 +17,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'rest-client', '1.8.0'
   s.add_runtime_dependency 'ruby-mysql', '~> 2.9'
 
+  s.add_runtime_dependency 'sensu-plugins-aws', '4.0.0'
+
   s.add_development_dependency 'bundler',                   '~> 1.7'
   s.add_development_dependency 'rake',                      '~> 10.5'
   s.add_development_dependency 'rubocop',                   '~> 0.40.0'
