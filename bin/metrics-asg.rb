@@ -101,7 +101,7 @@ class ASGMetrics < Sensu::Plugin::Metric::CLI::Graphite
       metric_name: metric_name,
       dimensions: [
         {
-          name: 'AutoScaling',
+          name: 'AutoScalingGroupName',
           value: asg_name
         }
       ],
@@ -121,7 +121,7 @@ class ASGMetrics < Sensu::Plugin::Metric::CLI::Graphite
       result['AutoScalingGroup.' + asg_name + '.' + key + '.' + static] = r[:datapoints][0] unless r[:datapoints][0].nil?
     end
     result.each do |key, value|
-      output key.downcase.to_s, value[static_value[key].downcase], value[:timestamp].to_i
+      output config[:scheme] + '.' + key.downcase.to_s, value[static_value[key].downcase], value[:timestamp].to_i
     end
   end
 
