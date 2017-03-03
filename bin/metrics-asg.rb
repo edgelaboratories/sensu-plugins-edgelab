@@ -31,8 +31,8 @@
 #
 
 require 'sensu-plugin/metric/cli'
+require 'sensu-plugins-edgelab'
 require 'aws-sdk'
-require 'sensu-plugins-aws'
 require 'time'
 
 class ASGMetrics < Sensu::Plugin::Metric::CLI::Graphite

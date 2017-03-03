@@ -1,5 +1,10 @@
 # frozen_string_literal: true
+
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
 require 'date'
+require_relative 'lib/sensu-plugins-edgelab'
 
 Gem::Specification.new do |s|
   s.authors                = ['Edgelab']
@@ -18,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'rest-client', '1.8.0'
   s.add_runtime_dependency 'ruby-mysql', '~> 2.9'
 
-  s.add_runtime_dependency 'sensu-plugins-aws', '4.0.0'
+  s.add_runtime_dependency 'aws-sdk', '~> 2.3'
 
   s.add_development_dependency 'bundler',                   '~> 1.7'
   s.add_development_dependency 'rake',                      '~> 10.5'

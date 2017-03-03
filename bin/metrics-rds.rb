@@ -27,8 +27,8 @@
 #   for details.
 #
 
-require 'sensu-plugins-aws'
 require 'sensu-plugin/metric/cli'
+require 'sensu-plugins-edgelab'
 require 'aws-sdk'
 require 'time'
 
