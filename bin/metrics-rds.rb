@@ -28,12 +28,10 @@
 #
 
 require 'sensu-plugin/metric/cli'
-require 'sensu-plugins-edgelab'
 require 'aws-sdk'
 require 'time'
 
 class RDSMetrics < Sensu::Plugin::Metric::CLI::Graphite
-  include Common
   option :aws_region,
          short:       '-r AWS_REGION',
          long:        '--aws-region REGION',

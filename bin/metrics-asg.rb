@@ -31,12 +31,10 @@
 #
 
 require 'sensu-plugin/metric/cli'
-require 'sensu-plugins-edgelab'
 require 'aws-sdk'
 require 'time'
 
 class ASGMetrics < Sensu::Plugin::Metric::CLI::Graphite
-  include Common
   option :asgname,
          description: 'Name of the Auto Scaling Group',
          short: '-n ASG_NAME',

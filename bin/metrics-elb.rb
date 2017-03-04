@@ -37,12 +37,10 @@
 #   Using aws sdk version 2
 
 require 'sensu-plugin/metric/cli'
-require 'sensu-plugins-edgelab'
 require 'aws-sdk'
 require 'time'
 
 class ELBMetrics < Sensu::Plugin::Metric::CLI::Graphite
-  include Common
   option :elbname,
          description: 'Name of the Elastic Load Balancer',
          short: '-n ELB_NAME',

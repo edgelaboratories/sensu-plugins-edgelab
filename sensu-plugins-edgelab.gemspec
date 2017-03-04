@@ -1,10 +1,5 @@
 # frozen_string_literal: true
-
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-
 require 'date'
-require_relative 'lib/sensu-plugins-edgelab'
 
 Gem::Specification.new do |s|
   s.authors                = ['Edgelab']
