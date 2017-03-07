@@ -53,11 +53,19 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
   def placement_failures_reasons(failed_eval)
     reasons = []
     failed_eval['FailedTGAllocs'].each do |_, metrics|
-      metrics.fetch(:ClassFiltered, []).each do |class_, count|
+      fetch = lambda do |key|
+        if metrics.key?(key) && !metrics[key].nil?
+          metrics[key]
+        else
+          {}
+        end
+      end
+
+      fetch.call(:ClassFiltered).each do |class_, count|
         reasons << "Class #{class_} filtered #{count} nodes"
       end
 
-      metrics.fetch(:ConstraintFiltered, []).each do |constraint, count|
+      fetch.call(:ConstraintFiltered).each do |constraint, count|
         reasons << "Constraint #{constraint} filtered #{count} nodes"
       end
 
@@ -65,11 +73,11 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
         reasons << "Resources exhausted on #{metrics['NodesExhausted']} nodes"
       end
 
-      metrics.fetch(:ClassExhausted, []).each do |class_, count|
+      fetch.call(:ClassExhausted).each do |class_, count|
         reasons << "Class #{class_} exhausted on #{count} nodes"
       end
 
-      metrics.fetch('DimensionExhausted', []).each do |dimension, count|
+      fetch.call('DimensionExhausted').each do |dimension, count|
         reasons << "#{dimension} on #{count} nodes"
       end
     end
