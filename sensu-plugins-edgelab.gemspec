@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.platform               = Gem::Platform::RUBY
   s.required_ruby_version  = '>= 2.0.0'
   s.summary                = 'Contains Edgelab plugins for Sensu'
-  s.version                = '1.6.4'
+  s.version                = '1.7.0'
 
   s.add_runtime_dependency 'sensu-plugin', '~> 1.2'
   s.add_runtime_dependency 'diplomat',     '0.14.0'
