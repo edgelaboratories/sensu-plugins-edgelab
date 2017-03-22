@@ -101,7 +101,7 @@ class RedisKeyPatternMetric < Sensu::Plugin::Metric::CLI::Graphite
         counter[head] += 1
       end
 
-      counter.each { |key, count| output "#{config[:scheme]}.db.#{db}.patterns.#{key}", count }
+      counter.each { |key, count| output "#{config[:scheme]}.db#{db}.patterns.#{key}", count }
     end
     ok
   end
