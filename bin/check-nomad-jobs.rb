@@ -33,6 +33,11 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
          long: '--alloc-restarts-interval SECONDS',
          default: 3600
 
+  option :client_pending_time,
+         description: 'Pending time limit for a task on a client',
+         long: '--client-pending-time SECONDS',
+         default: 60 * 10
+
   # Call Nomad api and parse the JSON response
   def api_call(endpoint)
     url = config[:nomad] + endpoint
@@ -122,6 +127,23 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
       if alloc['DesiredStatus'] == 'run'
         # Batch stay in run DesiredStatus even if task completed successfully.
         next if job['Type'] == 'batch' && alloc['ClientStatus'] == 'complete'
+
+        if alloc['TaskStates'].nil? && alloc['ClientStatus'] == 'pending'
+          # {"ID" => "6e6d8f0c-0ddb-6083-37ca-50c05b75ceae",
+          # "EvalID" => "aa228c5c-c203-c1f7-3d0c-91ba4aa70c7c",
+          # "Name" => "stuff/periodic-1490196240.tuff[0]",
+          # "NodeID" => "5165a46e-3dea-6346-6ac4-439934e1856e",
+          # "JobID" => "stuff/periodic-1490196240",
+          # "TaskGroup" => "stuff", "DesiredStatus" => "run",
+          # "DesiredDescription" => "", "ClientStatus" => "pending",
+          # "ClientDescription" => "", "TaskStates" => nil,
+          # "CreateIndex" => 326672, "ModifyIndex" => 326672,
+          # "CreateTime" => 1490196240365025270}
+          pending_for = (Time.new - Time.at(alloc['CreateTime'] / 1_000_000_000)).round
+          if pending_for > config[:client_pending_time]
+            failed << "Alloc #{alloc['Name']} is pending on client since #{pending_for} seconds"
+          end
+        end
 
         alloc['TaskStates'].each do |_, state|
           if state['State'] == 'dead'
