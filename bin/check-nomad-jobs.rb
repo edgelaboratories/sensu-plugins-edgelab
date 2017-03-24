@@ -175,6 +175,8 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
 
     allocations.each do |alloc|
       if %w(running pending).include? alloc['ClientStatus']
+        next if alloc['TaskStates'].nil?
+
         alloc['TaskStates'].each do |_, state|
           restarts = 0
           state['Events'].each do |event|
