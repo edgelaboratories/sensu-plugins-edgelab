@@ -143,6 +143,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
           if pending_for > config[:client_pending_time]
             failed << "Alloc #{alloc['Name']} is pending on client since #{pending_for} seconds"
           end
+          next
         end
 
         alloc['TaskStates'].each do |_, state|
