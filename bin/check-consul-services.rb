@@ -29,7 +29,7 @@
 require 'sensu-plugin/check/cli'
 require 'diplomat'
 
-class CheckConsulServiceS < Sensu::Plugin::Check::CLI
+class CheckConsulServices < Sensu::Plugin::Check::CLI
   option :consul,
          description: 'consul server',
          long: '--consul SERVER',
