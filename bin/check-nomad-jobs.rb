@@ -119,6 +119,12 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     end
   end
 
+  # Check for service/system job if he is running.
+  def check_state(job, failed)
+    return unless job['Type'] != 'batch' && job['Status'] != 'running'
+    failed << "The #{job['Type']} job #{job['Name']} status is #{job['Status']}"
+  end
+
   # Check that allocations are in the desired status
   def check_allocations(job, failed)
     allocations = api_call "/v1/job/#{job['ID']}/allocations"
@@ -205,6 +211,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     failed = []
 
     jobs.each do |job|
+      check_state job, failed
       check_evaluations job, failed
       check_allocations job, failed
       check_restarts job, failed
