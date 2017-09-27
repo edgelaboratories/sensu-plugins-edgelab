@@ -10,15 +10,17 @@ Gem::Specification.new do |s|
   s.platform               = Gem::Platform::RUBY
   s.required_ruby_version  = '>= 2.0.0'
   s.summary                = 'Contains Edgelab plugins for Sensu'
-  s.version                = '1.9.0'
 
-  s.add_runtime_dependency 'sensu-plugin', '~> 1.2'
-  s.add_runtime_dependency 'diplomat',     '2.0.2'
-  s.add_runtime_dependency 'inifile', '3.0.0'
-  s.add_runtime_dependency 'rest-client', '1.8.0'
-  s.add_runtime_dependency 'redis', '3.2.1'
+  s.version                = '1.10.0'
 
-  s.add_runtime_dependency 'aws-sdk', '~> 2.3'
+  s.add_runtime_dependency 'sensu-plugin',           '~> 1.2'
+  s.add_runtime_dependency 'sensu-plugins-rabbitmq', '3.5.0'
+  s.add_runtime_dependency 'diplomat',               '2.0.2'
+  s.add_runtime_dependency 'inifile',                '3.0.0'
+  s.add_runtime_dependency 'rest-client',            '1.8.0'
+  s.add_runtime_dependency 'ruby-mysql',             '~> 2.9'
+  s.add_runtime_dependency 'redis',                  '3.2.1'
+  s.add_runtime_dependency 'aws-sdk',                '~> 2.3'
 
   s.add_development_dependency 'bundler',                   '~> 1.7'
   s.add_development_dependency 'rake',                      '~> 10.5'
