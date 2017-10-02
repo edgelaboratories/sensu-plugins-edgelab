@@ -37,13 +37,13 @@ class CheckRabbitMQQueuesSynchronised < Sensu::Plugin::RabbitMQ::Check
     queues = get_queues config
 
     queues.each do |q|
-      next unless q['durable'] # Non-durable queues are not concerned with synchronization
+      next unless q.key?("slave_nodes")
+
       nb_slaves = q['slave_nodes'].count
-      unless nb_slaves == 0
-        unsynchronised = nb_slaves - q['synchronised_slave_nodes'].count
-        if unsynchronised != 0
-          @crit << "#{q['name']}: #{unsynchronised} unsynchronised slave(s)"
-        end
+      next unless nb_slaves != 0
+      unsynchronised = nb_slaves - q['synchronised_slave_nodes'].count
+      if unsynchronised != 0
+        @crit << "#{q['name']}: #{unsynchronised} unsynchronised slave(s)"
       end
     end
     if @crit.empty?
