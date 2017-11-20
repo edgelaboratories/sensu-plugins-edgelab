@@ -37,7 +37,7 @@ class CheckRabbitMQQueuesSynchronised < Sensu::Plugin::RabbitMQ::Check
     queues = get_queues config
 
     queues.each do |q|
-      next unless q.key?("slave_nodes")
+      next unless q.key?('slave_nodes')
 
       nb_slaves = q['slave_nodes'].count
       next unless nb_slaves != 0
