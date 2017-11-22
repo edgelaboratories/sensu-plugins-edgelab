@@ -30,6 +30,20 @@ require 'time'
 require 'timeout'
 
 class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
+  option :duration_warning,
+         description: 'Warn if lookup time greater than TIME',
+         short: '-w TIME',
+         long: '--warning TIME',
+         proc: proc(&:to_i),
+         default: 15
+
+  option :duration_critical,
+         description: 'Error if lookup time greater than TIME',
+         short: '-c TIME',
+         long: '--critical TIME',
+         proc: proc(&:to_i),
+         default: 40
+
   option :logstash_host,
          description: 'Logstash hostname',
          long: '--logstash-host HOSTNAME',
@@ -51,7 +65,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
          short: '-t TIME',
          long: '--timeout TIME',
          proc: proc(&:to_i),
-         default: 30
+         default: 60
 
   option :elaticsearch_request_interval,
          description: 'Duration to wait between each Elasticsearch request',
@@ -102,7 +116,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
     url = "#{config[:elasticsearch_url]}/_msearch"
 
     tries = 0
-    found = nil
+    found = 0
 
     while Time.now.to_i - sent_at.to_i < config[:timeout]
       sleep config[:elaticsearch_request_interval]
@@ -112,6 +126,19 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
       break if found > 0
     end
 
-    ok "Event found (duration=#{Time.now.to_i - sent_at.to_i}s, requests=#{tries}, results=#{found})"
+    duration = Time.now.to_i - sent_at.to_i
+
+    if found <= 0
+      critical "Event #{message} NOT found"
+    end
+
+    msg = "Event found (duration=#{duration}s, requests=#{tries}, results=#{found})"
+    if duration > config[:duration_critical]
+      critical msg
+    elsif duration > config[:duration_warning]
+      warning msg
+    else
+      ok msg
+    end
   end
 end
