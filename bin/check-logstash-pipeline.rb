@@ -102,7 +102,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
               range: {
                 "@timestamp": {
                   gte: sent_at.to_i,
-                  lte: sent_at.to_i + 60 * 5, # + 5 minutes
+                  lte: sent_at.to_i + config[:timeout],
                   format: 'epoch_second'
                 }
               }
