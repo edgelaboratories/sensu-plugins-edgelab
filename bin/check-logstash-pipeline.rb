@@ -77,19 +77,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
     socket.puts(JSON.generate(msg))
     socket.close
 
-    format = '%Y.%m.%d'
-    yesterday = (sent_at - (60 * 60 * 24)).strftime format
-    tomorrow = (sent_at + (60 * 60 * 24)).strftime format
-    today = sent_at.strftime format
-
-    msearch1 = {
-      index: [
-        "logstash-#{today}",
-        "logstash-#{yesterday}",
-        "logstash-#{tomorrow}"
-      ],
-      ignore_unavailable: true
-    }
+    msearch1 = {index: ["logstash-*"]}
     msearch2 = {
       size: 5,
       query: {
