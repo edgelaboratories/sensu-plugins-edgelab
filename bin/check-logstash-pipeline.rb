@@ -91,7 +91,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
     socket.puts(JSON.generate(msg))
     socket.close
 
-    msearch1 = {index: ["logstash-*"]}
+    msearch1 = { index: ['logstash-*'] }
     msearch2 = {
       size: 5,
       query: {
