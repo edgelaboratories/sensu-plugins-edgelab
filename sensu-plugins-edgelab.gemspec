@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'aws-sdk',               '~> 2.3'
   s.add_runtime_dependency 'cassandra-driver',      '~> 3.2.2'
   s.add_runtime_dependency 'diplomat',              '2.0.2'
-  s.add_runtime_dependency 'erubis',                '2.7.0'
   s.add_runtime_dependency 'hipchat',               '1.5.1'
   s.add_runtime_dependency 'inifile',               '3.0.0'
   s.add_runtime_dependency 'json',                  '1.8.6'

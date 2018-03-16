@@ -25,7 +25,7 @@
 require 'sensu-handler'
 require 'hipchat'
 require 'timeout'
-require 'erubis'
+require 'erb'
 
 class HipChatNotif < Sensu::Handler
   option :json_config,
@@ -79,7 +79,7 @@ class HipChatNotif < Sensu::Handler
       ].join
       %>'''
     end
-    eruby = Erubis::Eruby.new(template)
+    eruby = ERB.new(template)
     message = eruby.result(binding)
 
     begin
