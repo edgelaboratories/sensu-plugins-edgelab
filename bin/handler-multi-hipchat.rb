@@ -26,6 +26,7 @@ require 'sensu-handler'
 require 'hipchat'
 require 'timeout'
 require 'erb'
+require 'json'
 
 class HipChatNotif < Sensu::Handler
   option :json_config,
@@ -45,8 +46,19 @@ class HipChatNotif < Sensu::Handler
     apiversion = settings[json_config]['apiversion'] || 'v1'
     proxy_url = settings[json_config]['proxy_url']
     hipchatmsg = HipChat::Client.new(settings[json_config]['apikey'], api_version: apiversion, http_proxy: proxy_url, server_url: server_url)
-    room = @event['client']['hipchat_room'] || @event['check']['hipchat_room'] || settings[json_config]['room']
     from = settings[json_config]['from'] || 'Sensu'
+
+    room = @event['client']['hipchat_room'] || @event['check']['hipchat_room'] || settings[json_config]['room']
+
+    mentions = @event['check']['hipchat_mentions'] || []
+    if not mentions.kind_of?(Array)
+      mentions = [mentions]
+    end
+    mentions = mentions.map{ |e| String(e) }
+
+    puts "Will mentions: #{mentions}"
+    puts "Will send to room: #{room}"
+
     message_template = settings[json_config]['message_template']
     message_format = settings[json_config]['message_format'] || 'html'
 
@@ -82,16 +94,45 @@ class HipChatNotif < Sensu::Handler
     eruby = ERB.new(template)
     message = eruby.result(binding)
 
+    if @event['action'].eql?('resolve')
+      color = 'green'
+      notify = false
+    elsif @event['action'].eql?('flapping')
+      color = [0, 1].include?(@event['check']['status']) ? 'yellow' : 'red'
+      notify = false
+    else
+      color = @event['check']['status'] == 1 ? 'yellow' : 'red'
+      notify = true
+    end
+
+    mentions = mentions.map{|user| "@#{user}"}.join(", ")
+
+    if mentions and message_format != "html"
+      message = "#{message}\n#{mentions}"
+    end
+
     begin
       Timeout.timeout(5) do
-        if @event['action'].eql?('resolve')
-          hipchatmsg[room].send(from, message, color: 'green', message_format: message_format)
-        else
-          hipchatmsg[room].send(from, message, color: @event['check']['status'] == 1 ? 'yellow' : 'red', notify: true, message_format: message_format)
-        end
+        hipchatmsg[room].send(from, message,
+                              color: color,
+                              notify: notify,
+                              message_format: message_format)
       end
     rescue Timeout::Error
-      puts "hipchat -- timed out while attempting to message #{room}"
+      puts "Timed out while attempting to message #{room}"
+    end
+
+    if message_format == 'html' and mentions and not @event['action'].eql?('resolve')
+      # HTML messages won't notify when using @mentions.
+      begin
+        Timeout.timeout(5) do
+          hipchatmsg[room].send(from, mentions,
+                                color: color,
+                                message_format: "text")
+        end
+      rescue Timeout::Error
+        puts "Timed out while attempting to send mentions to #{room}"
+      end
     end
   end
 end
