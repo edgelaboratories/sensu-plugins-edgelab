@@ -51,10 +51,10 @@ class HipChatNotif < Sensu::Handler
     room = @event['client']['hipchat_room'] || @event['check']['hipchat_room'] || settings[json_config]['room']
 
     mentions = @event['check']['hipchat_mentions'] || []
-    if not mentions.kind_of?(Array)
+    unless mentions.is_a?(Array)
       mentions = [mentions]
     end
-    mentions = mentions.map{ |e| String(e) }
+    mentions = mentions.map { |e| String(e) }
 
     puts "Will mentions: #{mentions}"
     puts "Will send to room: #{room}"
@@ -81,7 +81,7 @@ class HipChatNotif < Sensu::Handler
     if message_template && File.readable?(message_template)
       template = File.read(message_template)
     else
-      template = '''<%=
+      template = '<%=
       [
         @event["action"].eql?("resolve") ? "RESOLVED" : "ALERT",
         " - [#{event_name}] - ",
@@ -89,7 +89,7 @@ class HipChatNotif < Sensu::Handler
         playbook,
         "."
       ].join
-      %>'''
+      %>'
     end
     eruby = ERB.new(template)
     message = eruby.result(binding)
@@ -105,9 +105,9 @@ class HipChatNotif < Sensu::Handler
       notify = true
     end
 
-    mentions = mentions.map{|user| "@#{user}"}.join(", ")
+    mentions = mentions.map { |user| "@#{user}" }.join(', ')
 
-    if mentions and message_format != "html" and not @event['action'].eql?('resolve')
+    if mentions && message_format != 'html' && !@event['action'].eql?('resolve')
       # Add the mention only if the action is not resolved.
       message = "#{message} #{mentions}"
     end
@@ -123,13 +123,13 @@ class HipChatNotif < Sensu::Handler
       puts "Timed out while attempting to message #{room}"
     end
 
-    if message_format == 'html' and mentions and not @event['action'].eql?('resolve')
+    if message_format == 'html' && mentions && !@event['action'].eql?('resolve')
       # HTML messages won't notify when using @mentions.
       begin
         Timeout.timeout(5) do
           hipchatmsg[room].send(from, mentions,
                                 color: color,
-                                message_format: "text")
+                                message_format: 'text')
         end
       rescue Timeout::Error
         puts "Timed out while attempting to send mentions to #{room}"

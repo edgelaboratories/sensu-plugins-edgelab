@@ -62,7 +62,7 @@ class CassandraBasicMetrics < Sensu::Plugin::Metric::CLI::Graphite
   def connect
     @cluster = Cassandra.cluster(
       hosts: [config[:hostname]],
-      port: config[:port],
+      port: config[:port]
     )
   end
 
