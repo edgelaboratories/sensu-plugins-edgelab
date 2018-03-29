@@ -107,8 +107,9 @@ class HipChatNotif < Sensu::Handler
 
     mentions = mentions.map{|user| "@#{user}"}.join(", ")
 
-    if mentions and message_format != "html"
-      message = "#{message}\n#{mentions}"
+    if mentions and message_format != "html" and not @event['action'].eql?('resolve')
+      # Add the mention only if the action is not resolved.
+      message = "#{message} #{mentions}"
     end
 
     begin
