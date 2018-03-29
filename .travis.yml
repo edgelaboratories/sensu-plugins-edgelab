@@ -4,7 +4,7 @@ rvm:
 
 deploy:
   provider: rubygems
-  # travis encrypt --org --repo edgelaboratories/sensu-plugins-edgelab --add deploy.api_key
-  api_key: ""
+  api_key:
+    secure: PcuL1QjciDoU9uWmpmofB35/cKCJ93EeDD/ewvrNDFqGY7vhpQ8aDJkGJ4b1xFz3qEM7MxYyBupeRtC0aAx5woMlH9OPs+L/XCh/D/XCmFjyHbMM2ZKAme9AcbKVnyh8QBaRfoOuMtBNb2i8lOw8LunF1i5rYze0KhUHPy2+JKO1TfLfl6EdBHj9C5uMxF5noaqUW+02yHAtOcMbHYmqiYMVQTZ3xkagPp104+NIPIPk66mGZh7U6U59PllAXpsEZ1642c45GtxUHW4ZEg7jtGwswu515EE63Nm/dha4H66vMrZozKdmvemAvtt2S+SmN2ZSKao2wr8MyUUX1VygoOEHbtjXv4zbyS2lLZd0q16bQyOXRtDJIvdnj7c71TczzB9IiavpJ+t8BCAYBT2nfHp7Tx/2pDJyRXT/7YZemWn9lCxM5FL9zzrbULTIdJAEwIM3s+CmIop2IHEC+req9mXrHEl9FYgduvcWWspY7UCA7qYa1514E10n1YJgC8ZBe34wrNUDWQUomFeIODk/RyAsolM/cL2evlz7/DTZS50GAfx20aAAlDC0+ahNQfgKwTLXHshZnRdqA+nYSju0X+g7CWIAGdvlogrL1Fgq8nMqf7yNyNejBY1QnZjldNdwvftcdmTK4pg7T35vNmcpPaJyDB+vGvSAD6Q3A4s3xnU=
   on:
     tags: true
