@@ -1,0 +1,10 @@
+language: ruby
+rvm:
+  - 2.3.0
+
+deploy:
+  provider: rubygems
+  # travis encrypt --org --repo edgelaboratories/sensu-plugins-edgelab --add deploy.api_key
+  api_key: ""
+  on:
+    tags: true
