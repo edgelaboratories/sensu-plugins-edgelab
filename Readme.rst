@@ -2,6 +2,11 @@
 Sensu plugins repository
 ========================
 
+.. |travis-build| image:: https://travis-ci.org/edgelaboratories/sensu-plugins-edgelab.svg?branch=master
+.. |rubygems-version| image:: https://badge.fury.io/rb/sensu-plugins-edgelab.svg
+
+|travis-build| |rubygems-version|
+
 This repository contains custom Sensu plugins developed by Edgelab.
 
 
