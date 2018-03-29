@@ -123,7 +123,7 @@ class CheckLogstashPipeline < Sensu::Plugin::Check::CLI
       tries += 1
       response = RestClient.post(url, body)
       found = JSON.parse(response)['responses'][0]['hits']['total']
-      break if found > 0
+      break if found.positive?
     end
 
     duration = Time.now.to_i - sent_at.to_i

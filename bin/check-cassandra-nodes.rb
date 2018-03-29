@@ -108,9 +108,9 @@ class CheckCassandraNode < Sensu::Plugin::Check::CLI
       ok_nodes << "#{address} is normal (#{node[:status]}#{node[:state]})"
     end
 
-    if error_nodes.count > 0
+    if error_nodes.count.positive?
       criticial error_nodes.join(', ')
-    elsif warning_nodes.count > 0
+    elsif warning_nodes.positive?
       warning warning_nodes.join(', ')
     else
       ok ok_nodes.join(', ')

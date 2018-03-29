@@ -1,5 +1,6 @@
 #! /usr/bin/env ruby
 # frozen_string_literal: true
+
 #
 #   check-apt-expired-keys
 #
@@ -39,7 +40,7 @@ class APTKey < Sensu::Plugin::Check::CLI
 
     expired = expired_keys
 
-    if expired.count > 0
+    if expired.count.positive?
       if expired.count == 1
         verb = 'is'
         noun = 'key'

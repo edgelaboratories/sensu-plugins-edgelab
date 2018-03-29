@@ -129,11 +129,8 @@ class RDSMetrics < Sensu::Plugin::Metric::CLI::Graphite
       r = cloud_watch_metric key, rdsname
       result[config[:scheme] + '.' + rdsname + '.' + key] = r[:datapoints][0] unless r[:datapoints][0].nil?
     end
-    unless result.nil?
-      result.each do |key, value|
-        output key.to_s, value.average, value[:timestamp].to_i
-      end
+    result.each do |key, value|
+      output key.to_s, value.average, value[:timestamp].to_i
     end
-    exit
   end
 end

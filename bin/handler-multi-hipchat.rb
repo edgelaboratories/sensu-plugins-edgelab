@@ -68,7 +68,7 @@ class HipChatNotif < Sensu::Handler
     if @event['check']['playbook']
       begin
         uri = URI.parse(@event['check']['playbook'])
-        playbook << if %w( http https ).include?(uri.scheme)
+        playbook << if %w[http https].include?(uri.scheme)
                       "  [<a href='#{@event['check']['playbook']}'>Playbook</a>]"
                     else
                       "  Playbook:  #{@event['check']['playbook']}"
@@ -78,10 +78,10 @@ class HipChatNotif < Sensu::Handler
       end
     end
 
-    if message_template && File.readable?(message_template)
-      template = File.read(message_template)
-    else
-      template = '<%=
+    template = if message_template && File.readable?(message_template)
+                 File.read(message_template)
+               else
+                 '<%=
       [
         @event["action"].eql?("resolve") ? "RESOLVED" : "ALERT",
         " - [#{event_name}] - ",
@@ -90,7 +90,8 @@ class HipChatNotif < Sensu::Handler
         "."
       ].join
       %>'
-    end
+               end
+
     eruby = ERB.new(template)
     message = eruby.result(binding)
 
@@ -123,17 +124,17 @@ class HipChatNotif < Sensu::Handler
       puts "Timed out while attempting to message #{room}"
     end
 
-    if message_format == 'html' && mentions && !@event['action'].eql?('resolve')
-      # HTML messages won't notify when using @mentions.
-      begin
-        Timeout.timeout(5) do
-          hipchatmsg[room].send(from, mentions,
-                                color: color,
-                                message_format: 'text')
-        end
-      rescue Timeout::Error
-        puts "Timed out while attempting to send mentions to #{room}"
+    return unless message_format == 'html' && mentions && !@event['action'].eql?('resolve')
+
+    # HTML messages won't notify when using @mentions.
+    begin
+      Timeout.timeout(5) do
+        hipchatmsg[room].send(from, mentions,
+                              color: color,
+                              message_format: 'text')
       end
+    rescue Timeout::Error
+      puts "Timed out while attempting to send mentions to #{room}"
     end
   end
 end

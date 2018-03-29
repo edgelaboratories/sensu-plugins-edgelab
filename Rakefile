@@ -1,8 +1,9 @@
 # frozen_string_literal: true
+
 require 'bundler/gem_tasks'
 require 'rubocop/rake_task'
 
-args = [:make_bin_executable, :rubocop, :check_binstubs]
+args = %i[make_bin_executable rubocop check_binstubs]
 
 RuboCop::RakeTask.new
 

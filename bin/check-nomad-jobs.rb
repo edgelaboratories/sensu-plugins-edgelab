@@ -74,7 +74,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
         reasons << "Constraint #{constraint} filtered #{count} nodes"
       end
 
-      if metrics['NodesExhausted'] > 0
+      if (metrics['NodesExhausted']).positive?
         reasons << "Resources exhausted on #{metrics['NodesExhausted']} nodes"
       end
 
@@ -110,13 +110,12 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     end
 
     # System jobs don't have blocked evaluation, only one evaluation per job.
-    if (job['Type'] == 'system' || blocked) && !last_failed.nil?
-      failure_reasons = placement_failures_reasons last_failed
+    return unless (job['Type'] == 'system' || blocked) && !last_failed.nil?
 
-      if failure_reasons.any?
-        failed << "#{job['ID']}: Placemement failure [" + failure_reasons.join(' / ') + ']'
-      end
-    end
+    failure_reasons = placement_failures_reasons last_failed
+    return unless failure_reasons.any?
+
+    failed << "#{job['ID']}: Placemement failure [" + failure_reasons.join(' / ') + ']'
   end
 
   # Check for service/system job if he is running.
@@ -180,7 +179,7 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
     now = Time.new.to_i
 
     allocations.each do |alloc|
-      if %w(running pending).include? alloc['ClientStatus']
+      if %w[running pending].include? alloc['ClientStatus']
         next if alloc['TaskStates'].nil?
 
         alloc['TaskStates'].each do |_, state|
