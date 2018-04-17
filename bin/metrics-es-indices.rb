@@ -92,7 +92,7 @@ class ESIndicesMetrics < Sensu::Plugin::Metric::CLI::Graphite
                end
 
     r = RestClient::Resource.new("#{protocol}://#{config[:host]}:#{config[:port]}#{resource}", timeout: config[:timeout], headers: headers)
-    JSON.parse(r.get)
+    ::JSON.parse(r.get)
   rescue Errno::ECONNREFUSED
     warning 'Connection refused'
   rescue RestClient::RequestTimeout
