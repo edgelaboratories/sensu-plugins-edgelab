@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 #
-# check-cassandra-schema
+# check-cassandra-nodes
 #
 # DESCRIPTION:
 #   This plugin uses Apache Cassandra's `nodetool` to see if any node in the
