@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 #
-#   check-es-cluster-health
+#   check-elasticsearch-cluster-health
 #
 # DESCRIPTION:
-#   This plugin checks the ElasticSearch cluster health and status.
+#   This plugin checks the Elasticsearch cluster health from its status and number of nodes present.
 #
 # OUTPUT:
 #   plain text
@@ -14,54 +14,29 @@
 # DEPENDENCIES:
 #   gem: sensu-plugin
 #   gem: elasticsearch
-#   gem: aws_es_transport
 #
 # USAGE:
-#   Checks against the ElasticSearch api for cluster health using the
-#     elasticsearch gem
+#   Checks against the Elasticsearch api for cluster health using the
+#   Elasticsearch gem
 #
 # NOTES:
+#   Adapted from sensu-plugins-elasticsearch `check-es-cluster-health.rb`
 #
 # LICENSE:
+#   Jonathan Ballet <jballet@edgelab.ch>
 #   Brendan Gibat <brendan.gibat@gmail.com>
 #   Released under the same terms as Sensu (the MIT license); see LICENSE
 #   for details.
-#
 
 require 'sensu-plugin/check/cli'
 require 'elasticsearch'
-require 'aws_es_transport'
-require 'sensu-plugins-elasticsearch'
 
-#
-# ES Cluster Health
-#
 class ESClusterHealth < Sensu::Plugin::Check::CLI
-  include ElasticsearchCommon
-
-  option :transport,
-         long: '--transport TRANSPORT',
-         description: 'Transport to use to communicate with ES. Use "AWS" for signed AWS transports.'
-
-  option :region,
-         long: '--region REGION',
-         description: 'Region (necessary for AWS Transport)'
-
   option :host,
          description: 'Elasticsearch host',
          short: '-h HOST',
          long: '--host HOST',
          default: 'localhost'
-
-  option :level,
-         description: 'Level of detail to check returend information ("cluster", "indices", "shards").',
-         short: '-l LEVEL',
-         long: '--level LEVEL'
-
-  option :local,
-         description: 'Return local information, do not retrieve the state from master node.',
-         long: '--local',
-         boolean: true
 
   option :port,
          description: 'Elasticsearch port',
@@ -92,41 +67,76 @@ class ESClusterHealth < Sensu::Plugin::Check::CLI
          proc: proc(&:to_i),
          default: 30
 
-  option :alert_status,
-         description: 'Only alert when status matches given RED/YELLOW/GREEN or if blank all statuses',
-         long: '--alert-status STATUS',
-         default: '',
-         in: ['RED', 'YELLOW', 'GREEN', '']
+  option :min_nodes,
+         description: 'Minimum of nodes that should be present in the cluster',
+         short: '-n NB_NODES',
+         long: '--minimum-nodes NB_NODES',
+         proc: proc(&:to_i),
+         default: 0
+
+  # From sensu-plugins-elasticsearch's ElasticsearchCommon
+  def client
+    transport_class = nil
+
+    host = {
+      host:               config[:host],
+      port:               config[:port],
+      request_timeout:    config[:timeout],
+      scheme:             config[:scheme]
+    }
+
+    if !config[:user].nil? && !config[:password].nil?
+      host[:user] = config[:user]
+      host[:password] = config[:password]
+      host[:scheme] = 'https' unless config[:scheme]
+    end
+
+    transport_options = {}
+
+    if config[:headers]
+
+      headers = {}
+
+      config[:headers].split(',').each do |header|
+        h, v = header.split(':', 2)
+        headers[h.strip] = v.strip
+      end
+
+      transport_options[:headers] = headers
+
+    end
+
+    @client ||= Elasticsearch::Client.new(transport_class: transport_class, hosts: [host], transport_options: transport_options)
+  end
 
   def run
     options = {}
-    unless config[:level].nil?
-      options[:level] = config[:level]
-    end
-    unless config[:local].nil?
-      options[:local] = config[:local]
-    end
-    unless config[:index].nil?
-      options[:index] = config[:index]
-    end
     health = client.cluster.health options
+
+    message = ''
+
     case health['status']
     when 'yellow'
-      if ['YELLOW', ''].include? config[:alert_status]
-        warning 'Cluster state is Yellow'
-      else
-        ok 'Not alerting on yellow'
-      end
+      cb = method(:warning)
+      message += 'Cluster state is Yellow'
     when 'red'
-      if ['RED', ''].include? config[:alert_status]
-        critical 'Cluster state is Red'
-      else
-        ok 'Not alerting on red'
-      end
+      cb = method(:critical)
+      critical 'Cluster state is Red'
     when 'green'
-      ok
+      cb = method(:ok)
+      message = 'Cluster state is Green'
     else
-      unknown "Cluster state is in an unknown health: #{health['status']}"
+      cb = method(:unknown)
+      message = "Cluster state is in an unknown health: #{health['status']}"
     end
+
+    message += " (#{health['active_shards_percent_as_number'].round(2)} % of active shards)"
+
+    if health['number_of_nodes'] < config[:min_nodes]
+      cb = method(:critical)
+      message = "Not enough nodes: #{health['number_of_nodes']} < #{config[:min_nodes]} - " + message
+    end
+
+    cb.call(message)
   end
 end
