@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'inifile',               '3.0.0'
   s.add_runtime_dependency 'redis',                 '3.2.1'
   s.add_runtime_dependency 'rest-client',           '1.8.0'
+  s.add_runtime_dependency 'elasticsearch',         '~> 1.0.14'
   s.add_runtime_dependency 'sensu-plugin',          '~> 2.0'
 
   # Temporary until https://github.com/sensu-plugins/sensu-plugins-aws/pull/287
