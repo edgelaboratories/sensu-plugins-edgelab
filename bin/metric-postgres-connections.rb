@@ -28,18 +28,11 @@
 #   for details.
 #
 
-require 'sensu-plugins-postgres/pgpass'
 require 'sensu-plugin/metric/cli'
 require 'pg'
 require 'socket'
 
 class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
-  option :pgpass,
-         description: 'Pgpass file',
-         short: '-f FILE',
-         long: '--pgpass',
-         default: "#{ENV['HOME']}/.pgpass"
-
   option :user,
          description: 'Postgres User',
          short: '-u USER',
@@ -63,7 +56,8 @@ class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
   option :database,
          description: 'Database name',
          short: '-d DB',
-         long: '--db DB'
+         long: '--db DB',
+         default: 'postgres'
 
   option :scheme,
          description: 'Metric naming scheme, text to prepend to $queue_name.$metric',
@@ -76,50 +70,26 @@ class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
          long: '--timeout TIMEOUT',
          default: nil
 
-  include Pgpass
-
   def run
     timestamp = Time.now.to_i
-    pgpass
-    con     = PG.connect(host: config[:hostname],
-                         dbname: config[:database],
-                         user: config[:user],
-                         password: config[:password],
-                         port: config[:port],
-                         connect_timeout: config[:timeout])
-    request = [
-      "select case when count(*) = 1 then 'waiting' else",
-      "'case when wait_event_type is null then false else true end' end as wait_col",
-      'from information_schema.columns',
-      "where table_name = 'pg_stat_activity' and table_schema = 'pg_catalog'",
-      "and column_name = 'waiting'"
-    ]
-    wait_col = con.exec(request.join(' ')).first['wait_col']
+    conn      = PG.connect(host: config[:hostname],
+                           dbname: config[:database],
+                           user: config[:user],
+                           password: config[:password],
+                           port: config[:port],
+                           connect_timeout: config[:timeout])
 
-    request = [
-      "select count(*), #{wait_col} as waiting from pg_stat_activity",
-      "where datname = '#{config[:database]}' group by #{wait_col}"
-    ]
+    # https://www.postgresql.org/docs/10/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW
+    query = <<END_SQL
+  SELECT usename, datname, replace(replace(replace(state, ' ', '_'), '(', ''), ')', '') as state, count(*)
+    FROM pg_stat_activity WHERE backend_type = 'client backend'
+    GROUP BY usename, datname, state;
+END_SQL
 
-    metrics = {
-      active: 0,
-      waiting: 0,
-      total: 0
-    }
-    con.exec(request.join(' ')) do |result|
+    conn.exec(query) do |result|
       result.each do |row|
-        if row['waiting'] == 't'
-          metrics[:waiting] = row['count']
-        elsif row['waiting'] == 'f'
-          metrics[:active] = row['count']
-        end
+        output "#{config[:scheme]}.connections.#{row['usename']}.#{row['datname']}.#{row['state']}", row['count'], timestamp
       end
-    end
-
-    metrics[:total] = (metrics[:waiting].to_i + metrics[:active].to_i)
-
-    metrics.each do |metric, value|
-      output "#{config[:scheme]}.connections.#{config[:database]}.#{metric}", value, timestamp
     end
 
     ok
