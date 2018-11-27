@@ -29,18 +29,11 @@
 #   for details.
 #
 
-require 'sensu-plugins-postgres/pgpass'
 require 'sensu-plugin/metric/cli'
 require 'pg'
 require 'socket'
 
 class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
-  option :pgpass,
-         description: 'Pgpass file',
-         short: '-f FILE',
-         long: '--pgpass',
-         default: ENV['PGPASSFILE'] || "#{ENV['HOME']}/.pgpass"
-
   option :user,
          description: 'Postgres User',
          short: '-u USER',
@@ -85,11 +78,8 @@ class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
          long: '--timeout TIMEOUT',
          default: nil
 
-  include Pgpass
-
   def run
     timestamp = Time.now.to_i
-    pgpass
     con = PG.connect(host: config[:hostname],
                      dbname: config[:database],
                      user: config[:user],
