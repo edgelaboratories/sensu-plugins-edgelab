@@ -31,4 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'bundler',           '~> 1.7'
   s.add_development_dependency 'rake',              '~> 10.5'
   s.add_development_dependency 'rubocop',           '~> 0.49.0'
+
+  # postgres
+  s.add_runtime_dependency 'pg', '0.18.4'
 end
