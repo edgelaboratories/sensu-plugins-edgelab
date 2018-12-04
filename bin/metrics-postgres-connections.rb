@@ -82,7 +82,7 @@ class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
     # https://www.postgresql.org/docs/10/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW
     query = <<END_SQL
   SELECT usename, datname, replace(replace(replace(state, ' ', '_'), '(', ''), ')', '') as state, count(*)
-    FROM pg_stat_activity WHERE backend_type = 'client backend'
+    FROM pg_stat_activity WHERE usename IS NOT NULL
     GROUP BY usename, datname, state;
 END_SQL
 
