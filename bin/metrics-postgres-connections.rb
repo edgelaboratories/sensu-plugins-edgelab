@@ -80,9 +80,10 @@ class PostgresStatsDBMetrics < Sensu::Plugin::Metric::CLI::Graphite
                            connect_timeout: config[:timeout])
 
     # https://www.postgresql.org/docs/10/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW
+    # *state* field needs superuser privileges to read state of other users, otherwise we set it to *unknown_state*
     query = <<END_SQL
-  SELECT usename, datname, replace(replace(replace(state, ' ', '_'), '(', ''), ')', '') as state, count(*)
-    FROM pg_stat_activity WHERE usename IS NOT NULL
+  SELECT usename, datname, replace(replace(replace(coalesce(state, 'unknown_state'), ' ', '_'), '(', ''), ')', '') as state, count(*)
+    FROM pg_stat_activity WHERE usename IS NOT NULL AND datname IS NOT NULL
     GROUP BY usename, datname, state;
 END_SQL
 
