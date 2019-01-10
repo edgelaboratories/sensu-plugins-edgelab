@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version  = '>= 2.0.0'
   s.summary                = 'Contains Edgelab plugins for Sensu'
 
-  s.version                = '1.18.4'
+  s.version                = '1.18.5'
 
   s.add_runtime_dependency 'cassandra-driver',      '~> 3.2.2'
   s.add_runtime_dependency 'diplomat',              '2.0.2'
