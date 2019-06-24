@@ -18,6 +18,11 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
          long: '--nomad SERVER',
          default: 'http://localhost:4646'
 
+  option :token,
+         description: 'Nomad ACL token to use',
+         long: '--token TOKEN',
+         default: ''
+
   option :alloc_starting_time,
          description: '',
          long: '--alloc-starting-time SECONDS',
@@ -41,8 +46,15 @@ class CheckNomadAllocations < Sensu::Plugin::Check::CLI
   # Call Nomad api and parse the JSON response
   def api_call(endpoint)
     url = config[:nomad] + endpoint
+    headers = {}
+    if config[:token]
+      headers['X-Nomad-Token'] = config[:token]
+    end
+
     begin
-      response = RestClient.get(url)
+      response = RestClient.get(url, headers)
+    rescue RestClient::ExceptionWithResponse => e
+      critical "Error #{e.http_code}: #{e.response}"
     rescue => e
       critical "Unable to connect to Nomad: #{e}"
     else
