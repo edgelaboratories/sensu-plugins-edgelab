@@ -19,7 +19,7 @@ class CheckNomadLeader < Sensu::Plugin::Check::CLI
          default: 'http://localhost:4646'
 
   # Actually no token is needed to query /v1/status/... endpoints
-  # We still added the parameter in case it changes in future version.
+  # We still add the parameter in case it changes in future versions.
   option :token,
          description: 'Nomad ACL token to use',
          long: '--token TOKEN',
