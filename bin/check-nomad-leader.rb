@@ -18,11 +18,23 @@ class CheckNomadLeader < Sensu::Plugin::Check::CLI
          long: '--nomad SERVER',
          default: 'http://localhost:4646'
 
+  # Actually no token is needed to query /v1/status/... endpoints
+  # We still add the parameter in case it changes in future versions.
+  option :token,
+         description: 'Nomad ACL token to use',
+         long: '--token TOKEN',
+         default: ''
+
   # Call Nomad api and parse the json response
   def api_call(endpoint)
     url = config[:nomad] + endpoint
+    headers = {}
+    if config[:token]
+      headers['X-Nomad-Token'] = config[:token]
+    end
+
     begin
-      response = RestClient.get(url)
+      response = RestClient.get(url, headers)
     rescue RestClient::ExceptionWithResponse => e
       critical "Error #{e.http_code}: #{e.response}"
     rescue => e
